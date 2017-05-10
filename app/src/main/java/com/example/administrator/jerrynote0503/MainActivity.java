@@ -4,9 +4,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,9 +16,11 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.greenrobot.eventbus.EventBus;
 import org.litepal.crud.DataSupport;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,11 +38,92 @@ public class MainActivity extends AppCompatActivity {
         initViews();
         initData();
         initAdapter();
+        initMotion();
+
+    }
+
+    private void initMotion() {
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
+            @Override
+            public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+                // 获取触摸响应的方向   包含两个 1.拖动dragFlags 2.侧滑删除swipeFlags
+                // 代表只能是向左侧滑删除，当前可以是这样ItemTouchHelper.LEFT|ItemTouchHelper.RIGHT
+                int dragFlag;
+                int swipeFlag;
+                RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+                if (layoutManager instanceof GridLayoutManager) {
+                    dragFlag = ItemTouchHelper.DOWN | ItemTouchHelper.UP
+                            | ItemTouchHelper.RIGHT | ItemTouchHelper.LEFT;
+                    swipeFlag = 0;
+                } else {
+                    dragFlag = ItemTouchHelper.DOWN | ItemTouchHelper.UP;
+                    swipeFlag = ItemTouchHelper.END;
+                }
+                return makeMovementFlags(dragFlag, swipeFlag);
+            }
+
+
+
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                int fromPosition = viewHolder.getAdapterPosition();
+                int toPosition = target.getAdapterPosition();
+                if (fromPosition < toPosition) {
+                    for (int i = fromPosition; i < toPosition; i++) {
+                        Collections.swap(data, i, i + 1);
+                    }
+                } else {
+                    for (int i = fromPosition; i > toPosition; i--) {
+                        Collections.swap(data, i, i - 1);
+                    }
+                }
+                recyclerView.getAdapter().notifyItemMoved(fromPosition, toPosition);
+                return true;
+            }
+
+            /**
+             * 侧滑删除后会回调的方法
+             */
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                if (direction == ItemTouchHelper.END) {
+                    DataSupport.deleteAll(Note.class,"date = ?",data.get(position).getDate());
+                    initData();
+                    myAdapter.notifyDataSetChanged();
+                }
+            }
+
+            /**
+             * 拖动选择状态改变回调
+             */
+
+            /*@Override
+            public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState) {
+                super.onSelectedChanged(viewHolder, actionState);
+                if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
+                    viewHolder.itemView.setBackgroundColor(Color.GRAY);
+                }
+            }
+
+            @Override
+            public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+                super.clearView(recyclerView, viewHolder);
+                viewHolder.itemView.setBackgroundColor(0);
+                viewHolder.itemView.setElevation(18);
+            }*/
+        });
+        // 这个就不多解释了，就这么attach
+        itemTouchHelper.attachToRecyclerView(recycler_view);
+
     }
 
     private void initAdapter() {
         myAdapter=new MyAdapter(data);
         recycler_view.setAdapter(myAdapter);
+        //设置RecyclerView保持固定的大小,提高RecyclerView的性能
+        recycler_view.setHasFixedSize(true);
     }
 
     private void initData() {
@@ -53,6 +138,8 @@ public class MainActivity extends AppCompatActivity {
             Log.d("dd", "initData.: "+noteList.get(i).getContent());
         }
     }
+
+
 
     private void initViews() {
         toolbar= (Toolbar) findViewById(R.id.toolbar);
@@ -80,6 +167,33 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        recycler_view.addOnItemTouchListener(new ItemClickListener(new ItemClickListener.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                //String str1=data.get(position).getTitle()+data.get(position).getContent()+data.get(position).getDate();
+                //Toast.makeText(MainActivity.this,str1,Toast.LENGTH_LONG).show();
+                String str1=data.get(position).getTitle();
+                String str2=data.get(position).getContent();
+                String str3=data.get(position).getDate();
+                String str []=new String[]{str1,str2,str3};
+                EventBus.getDefault().postSticky(str);
+                Intent intent=new Intent(MainActivity.this,AlterActivity.class);
+                startActivity(intent);
+            }
+
+            @Override
+            public void onItemLongClick(View view, int position) {
+                //Toast.makeText(MainActivity.this,"这是onItemLongClick",Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onItemDoubleClick(View view, int position) {
+                //Toast.makeText(MainActivity.this,"这是onItemDoubleClick",Toast.LENGTH_SHORT).show();
+            }
+        }));
+
+
     }
 
     @Override

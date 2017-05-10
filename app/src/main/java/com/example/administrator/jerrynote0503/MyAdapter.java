@@ -1,5 +1,6 @@
 package com.example.administrator.jerrynote0503;
 
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,12 +21,14 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>{
         TextView tv_title;
         TextView tv_content;
         TextView tv_date;
+        CardView cardView;
 
         public ViewHolder(View itemView) {
             super(itemView);
             tv_title = (TextView) itemView.findViewById(R.id.tv_title);
             tv_content = (TextView) itemView.findViewById(R.id.tv_content);
             tv_date = (TextView) itemView.findViewById(R.id.tv_date);
+            cardView= (CardView) itemView.findViewById(R.id.cardView);
         }
     }
 
@@ -52,4 +55,8 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder>{
     public MyAdapter(List<Note> noteList){
         mNotes=noteList;
     }
+
+
+
+
 }

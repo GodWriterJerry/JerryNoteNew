@@ -11,6 +11,16 @@ public class Note extends DataSupport{
     private String content;
     private String date;
 
+    public Note(String content, String title, String date) {
+        this.content = content;
+        this.title = title;
+        this.date = date;
+    }
+
+    public Note() {
+
+    }
+
     public String getContent() {
         return content;
     }

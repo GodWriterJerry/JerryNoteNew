@@ -5,7 +5,7 @@ android {
     buildToolsVersion "25.0.2"
     defaultConfig {
         applicationId "com.example.administrator.jerrynote0503"
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -30,4 +30,6 @@ dependencies {
     compile 'com.github.chaychan:PowerfulViewLibrary:1.0'
     compile 'org.litepal.android:core:1.4.1'
     compile 'com.android.support:recyclerview-v7:26.0.0-alpha1'
+    compile 'com.android.support:cardview-v7:26.0.0-alpha1'
+    compile 'org.greenrobot:eventbus:3.0.0'
 }
